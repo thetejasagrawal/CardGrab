@@ -46,12 +46,29 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Code signing + notarization. See docs/NOTARIZATION.md for how to
+          # generate each of these secrets. If any are missing, tauri-action
+          # builds an unsigned bundle and skips notarization automatically.
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'cardgrab ${{ github.ref_name }}'
           releaseBody: |
-            See the [README](https://github.com/${{ github.repository }}#install) for install notes.
-            First launch requires right-click → Open since the build isn't notarized yet.
+            ## Install
+
+            Download the `.dmg` for your Mac:
+            - **Apple Silicon** (M1 / M2 / M3 / M4): `cardgrab_*_aarch64.dmg`
+            - **Intel**: `cardgrab_*_x64.dmg`
+
+            Drag cardgrab into Applications and launch. The build is signed
+            and notarized — no Gatekeeper warnings on first run.
+
+            See the [README](https://github.com/${{ github.repository }}#install) for full notes.
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}

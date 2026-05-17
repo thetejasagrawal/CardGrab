@@ -46,7 +46,12 @@
     ],
     "category": "Photography",
     "shortDescription": "Fast, complete SD card ingest",
-    "longDescription": "Mac-first SD card ingest that handles photo and video, with smart folder templates and Google Drive backup."
+    "longDescription": "Mac-first SD card ingest that handles photo and video at full reader speed, with smart folder templates and a local import journal.",
+    "macOS": {
+      "minimumSystemVersion": "11.0",
+      "frameworks": [],
+      "entitlements": "entitlements.plist"
+    }
   },
   "plugins": {}
 }

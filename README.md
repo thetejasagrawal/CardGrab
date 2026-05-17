@@ -35,7 +35,7 @@ cardgrab does one thing: it ingests **everything** on your card, fast, with sens
 
 Grab the latest `.dmg` from the [Releases](../../releases) page.
 
-The app isn't notarized yet, so the first launch needs right-click → Open. (Or run `xattr -dr com.apple.quarantine /Applications/cardgrab.app` after dragging it in.)
+Releases are signed with an Apple Developer ID and notarized — drag-into-Applications, double-click, no Gatekeeper warnings. (Setup details for maintainers: [`docs/NOTARIZATION.md`](docs/NOTARIZATION.md).)
 
 ### Build from source
 
@@ -87,7 +87,6 @@ Edit the template per-import or save your own in Settings.
 
 ## Roadmap
 
-- [ ] Notarized Mac builds (`.dmg` opens without Gatekeeper warnings)
 - [ ] Windows build (the Rust core is portable; needs a different volume-watcher and PTP path)
 - [ ] More camera support (Canon CR3, Fuji RAF EXIF quirks)
 - [ ] Cloud destinations (point at a Google Drive / iCloud-synced folder; rclone integration later)
