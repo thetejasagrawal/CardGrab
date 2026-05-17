@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { getCurrentWindow } from '@tauri-apps/api/window';
   import {
     api,
     onCardAttached,
@@ -8,6 +9,18 @@
     onImportComplete,
     type Card,
   } from './lib/api';
+
+  // Explicit window-drag handler. WKWebView (which Tauri uses on macOS) does NOT
+  // support -webkit-app-region: drag (Chromium-only extension), so JS is the
+  // only path. Attached in capture phase so no child can swallow the mousedown.
+  function handleWindowDrag(e: MouseEvent) {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest('button, input, textarea, select, a, [contenteditable="true"]')) return;
+    if (!target.closest('[data-tauri-drag-region]')) return;
+    getCurrentWindow().startDragging().catch((err) => console.error('startDragging:', err));
+  }
   import {
     cards,
     currentView,
@@ -26,6 +39,10 @@
   import SettingsView from './lib/components/SettingsView.svelte';
 
   onMount(() => {
+    // Attach drag handler at document capture phase — guarantees we run before
+    // any child stopPropagation can swallow the mousedown.
+    document.addEventListener('mousedown', handleWindowDrag, true);
+
     // Initial loads
     Promise.all([
       api.listCards().then((cs) => cards.set(cs)),
@@ -63,6 +80,7 @@
     }));
 
     return () => {
+      document.removeEventListener('mousedown', handleWindowDrag, true);
       unsubs.forEach((p) => p.then((u) => u()).catch(() => {}));
     };
   });
@@ -81,7 +99,6 @@
 </script>
 
 <div class="root">
-  <div class="window-titlebar drag-region" data-tauri-drag-region></div>
   <Sidebar />
 
   <main class="content">
@@ -121,20 +138,6 @@
     position: relative;
   }
 
-  /* Always-on draggable strip across the top of the window so the user can
-     drag from any X position. pointer-events: none lets normal clicks pass
-     through to buttons in per-view titlebars (e.g. Eject) — only the OS-level
-     window-drag hit test responds to this strip. Traffic lights render above
-     the webview entirely and remain clickable. */
-  .window-titlebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 28px;
-    z-index: 50;
-    pointer-events: none;
-  }
 
   .content {
     flex: 1;

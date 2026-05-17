@@ -18,8 +18,8 @@
   }
 </script>
 
-<aside class="sidebar drag-region">
-  <div class="titlebar-region"></div>
+<aside class="sidebar">
+  <div class="titlebar-region" data-tauri-drag-region></div>
 
   <nav class="nav no-drag">
     <section>

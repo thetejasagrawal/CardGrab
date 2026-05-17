@@ -52,10 +52,10 @@
 </script>
 
 <div class="settings">
-  <header class="titlebar drag-region">
-    <div class="title no-drag">Settings</div>
+  <header class="titlebar" data-tauri-drag-region>
+    <div class="title">Settings</div>
     {#if savedIndicator}
-      <div class="saved-pill no-drag">Saved</div>
+      <div class="saved-pill">Saved</div>
     {/if}
   </header>
 

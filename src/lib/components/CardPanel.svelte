@@ -309,9 +309,9 @@
 <svelte:window onkeydown={onKey} />
 
 <div class="panel">
-  <header class="titlebar drag-region">
-    <div class="title no-drag">{card.label}</div>
-    <div class="actions no-drag">
+  <header class="titlebar" data-tauri-drag-region>
+    <div class="title">{card.label}</div>
+    <div class="actions">
       {#if isCamera}
         <span class="port-pill">{card.port}</span>
       {:else}

@@ -2,8 +2,8 @@
   import { toolStatus } from '../stores';
 </script>
 
-<div class="empty drag-region">
-  <div class="stack no-drag">
+<div class="empty" data-tauri-drag-region>
+  <div class="stack">
     <div class="symbol" aria-hidden="true">
       <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
         <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"

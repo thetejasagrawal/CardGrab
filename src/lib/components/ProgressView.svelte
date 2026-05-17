@@ -26,8 +26,8 @@
 </script>
 
 <div class="view">
-  <header class="titlebar drag-region">
-    <div class="title no-drag">
+  <header class="titlebar" data-tauri-drag-region>
+    <div class="title">
       {#if completed}
         {#if completed.status === 'completed'}All in.
         {:else if completed.status === 'cancelled'}Stopped
@@ -37,7 +37,7 @@
         Importing
       {/if}
     </div>
-    <div class="actions no-drag">
+    <div class="actions">
       {#if completed}
         <Button variant="ghost" size="sm" onclick={goHistory}>View details</Button>
       {:else}

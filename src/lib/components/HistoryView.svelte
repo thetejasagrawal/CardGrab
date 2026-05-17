@@ -33,8 +33,8 @@
 </script>
 
 <div class="view">
-  <header class="titlebar drag-region">
-    <div class="title no-drag">History</div>
+  <header class="titlebar" data-tauri-drag-region>
+    <div class="title">History</div>
   </header>
 
   <div class="body">

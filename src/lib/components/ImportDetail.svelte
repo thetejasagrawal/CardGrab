@@ -44,8 +44,8 @@
 </script>
 
 <div class="detail">
-  <header class="head drag-region">
-    <div class="head-inner no-drag">
+  <header class="head" data-tauri-drag-region>
+    <div class="head-inner">
       <div>
         <button class="back" onclick={back}>← History</button>
         <div class="head-title">

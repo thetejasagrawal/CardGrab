@@ -1,7 +1,7 @@
 [package]
 name = "cardgrab"
-version = "0.1.0"
-description = "Fast, complete SD card ingest with Google Drive backup"
+version = "0.1.1"
+description = "Fast, complete SD card ingest"
 authors = ["Tejas Agrawal"]
 edition = "2021"
 rust-version = "1.77"
