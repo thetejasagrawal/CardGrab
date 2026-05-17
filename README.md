@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="cardgrabicon.png" alt="cardgrab" width="160"/>
+  <img src="cardgrabicon.png" alt="cardgrab" width="140"/>
 </p>
 
 <h1 align="center">cardgrab</h1>
@@ -8,9 +8,17 @@
   The fastest way to get photos and video off your camera card on a Mac.
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/hero.svg" alt="Browse before you import — thumbnails grouped by shoot date, multi-select with shift-range, one click to import" width="100%"/>
+</p>
+
 ---
 
 **cardgrab** is what Image Capture should have been in 2026. It pulls everything off your SD card — including the video files Image Capture quietly skips — at full reader speed, organizes them into folders you'll actually find later, and stays out of your way.
+
+<p align="center">
+  <img src="docs/screenshots/progress.svg" alt="Live progress: throughput, ETA, current file" width="100%"/>
+</p>
 
 ## Why this exists
 

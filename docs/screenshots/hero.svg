@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5f5f7"/>
+      <stop offset="1" stop-color="#ececec"/>
+    </linearGradient>
+    <filter id="winShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="20" stdDeviation="30" flood-opacity="0.20"/>
+    </filter>
+    <linearGradient id="t1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fcb69f"/><stop offset="1" stop-color="#ff9472"/></linearGradient>
+    <linearGradient id="t2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5ee7df"/><stop offset="1" stop-color="#b490ca"/></linearGradient>
+    <linearGradient id="t3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4facfe"/><stop offset="1" stop-color="#00f2fe"/></linearGradient>
+    <linearGradient id="t4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fa709a"/><stop offset="1" stop-color="#fee140"/></linearGradient>
+    <linearGradient id="t5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#667eea"/><stop offset="1" stop-color="#764ba2"/></linearGradient>
+    <linearGradient id="t6" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#43e97b"/><stop offset="1" stop-color="#38f9d7"/></linearGradient>
+    <linearGradient id="t7" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e3c72"/><stop offset="1" stop-color="#2a5298"/></linearGradient>
+    <linearGradient id="t8" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6d365"/><stop offset="1" stop-color="#fda085"/></linearGradient>
+    <linearGradient id="t9" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c471ed"/><stop offset="1" stop-color="#f64f59"/></linearGradient>
+    <linearGradient id="t10" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#74ebd5"/><stop offset="1" stop-color="#9face6"/></linearGradient>
+    <linearGradient id="glass" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#60a0ff" stop-opacity="0.65"/>
+      <stop offset="0.3" stop-color="#c0d4ff" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Page background (transparent for repo) -->
+  <rect width="1200" height="760" fill="transparent"/>
+
+  <!-- Window -->
+  <g filter="url(#winShadow)">
+    <rect x="40" y="30" width="1120" height="700" rx="12" fill="url(#bg)"/>
+  </g>
+
+  <!-- Traffic lights -->
+  <g>
+    <circle cx="70" cy="58" r="6.5" fill="#ff5f57"/>
+    <circle cx="92" cy="58" r="6.5" fill="#febc2e"/>
+    <circle cx="114" cy="58" r="6.5" fill="#28c840"/>
+  </g>
+
+  <!-- Sidebar -->
+  <g>
+    <rect x="40" y="30" width="220" height="700" rx="12" fill="#e6e6e8" fill-opacity="0.55"/>
+    <rect x="40" y="30" width="220" height="700" rx="12" fill="none"/>
+    <line x1="260" y1="30" x2="260" y2="730" stroke="#000" stroke-opacity="0.07"/>
+
+    <!-- Section: Cards -->
+    <text x="62" y="120" fill="#86868b" font-size="11" font-weight="600" letter-spacing="0.7">CARDS</text>
+    <rect x="48" y="132" width="204" height="28" rx="5" fill="#0a84ff"/>
+    <g transform="translate(60, 142)" fill="white">
+      <path d="M3 0h7l5 5v11a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V1a1 1 0 0 1 1-1Z" stroke="white" stroke-width="1.4" fill="none"/>
+      <path d="M6 2v2M8 2v2M10 2v2" stroke="white" stroke-width="1.4"/>
+    </g>
+    <text x="82" y="151" fill="white" font-size="13" font-weight="500">SONY α7 IV</text>
+
+    <!-- Section: Cameras -->
+    <text x="62" y="200" fill="#86868b" font-size="11" font-weight="600" letter-spacing="0.7">CAMERAS</text>
+    <text x="62" y="222" fill="#86868b" font-size="12">None connected</text>
+
+    <!-- Section: Library -->
+    <text x="62" y="270" fill="#86868b" font-size="11" font-weight="600" letter-spacing="0.7">LIBRARY</text>
+    <g transform="translate(56, 282)">
+      <rect width="200" height="26" rx="5" fill="transparent"/>
+      <g transform="translate(10, 8)" stroke="#515158" stroke-width="1.4" fill="none">
+        <circle cx="6" cy="6" r="5.5"/>
+        <path d="M6 2.5v3.5l2 1.3"/>
+      </g>
+      <text x="32" y="18" fill="#1d1d1f" font-size="13">History</text>
+    </g>
+
+    <!-- Settings (bottom) -->
+    <line x1="48" y1="680" x2="252" y2="680" stroke="#000" stroke-opacity="0.07"/>
+    <g transform="translate(56, 690)">
+      <rect width="200" height="26" rx="5" fill="transparent"/>
+      <g transform="translate(10, 8)" stroke="#515158" stroke-width="1.4" fill="none">
+        <circle cx="6" cy="6" r="2"/>
+        <path d="M11.4 7.2a1.1 1.1 0 0 0 .2 1.2l.05.05a1.4 1.4 0 1 1-2 2l-.04-.04a1.1 1.1 0 0 0-1.2-.22 1.1 1.1 0 0 0-.66 1V11.6a1.4 1.4 0 0 1-2.8 0v-.04A1.1 1.1 0 0 0 4 10.6a1.1 1.1 0 0 0-1.2.22l-.04.04a1.4 1.4 0 1 1-2-2L0.8 8.8a1.1 1.1 0 0 0 .22-1.2 1.1 1.1 0 0 0-1-.66H0a1.4 1.4 0 0 1 0-2.8h.04A1.1 1.1 0 0 0 1 3.4a1.1 1.1 0 0 0-.22-1.2L0.74 2.16a1.4 1.4 0 1 1 2-2l.04.05a1.1 1.1 0 0 0 1.2.22h.04a1.1 1.1 0 0 0 .66-1V0a1.4 1.4 0 0 1 2.8 0v.04A1.1 1.1 0 0 0 7.6 1a1.1 1.1 0 0 0 1.2-.22l.04-.04a1.4 1.4 0 1 1 2 2l-.04.04a1.1 1.1 0 0 0-.22 1.2v.04a1.1 1.1 0 0 0 1 .66H11.6a1.4 1.4 0 0 1 0 2.8h-.04a1.1 1.1 0 0 0-1 .66Z"/>
+      </g>
+      <text x="32" y="18" fill="#1d1d1f" font-size="13">Settings</text>
+    </g>
+  </g>
+
+  <!-- Main content area -->
+  <g>
+    <!-- Titlebar -->
+    <line x1="260" y1="82" x2="1160" y2="82" stroke="#000" stroke-opacity="0.07"/>
+    <text x="284" y="68" fill="#1d1d1f" font-size="13.5" font-weight="600">SONY α7 IV</text>
+    <g transform="translate(1080, 50)">
+      <rect width="60" height="22" rx="5" fill="transparent"/>
+      <text x="30" y="15" fill="#1d1d1f" font-size="12" text-anchor="middle">Eject</text>
+    </g>
+
+    <!-- Hero -->
+    <text x="284" y="120" fill="#86868b" font-size="10.5" font-weight="600" letter-spacing="0.7">SD CARD</text>
+    <text x="284" y="150" fill="#1d1d1f" font-size="22" font-weight="600" letter-spacing="-0.4">Sony α7 IV</text>
+    <text x="284" y="172" fill="#515158" font-size="12.5">483 files · 24.5 GB · May 14–May 17</text>
+
+    <!-- Toolbar -->
+    <rect x="284" y="194" width="240" height="26" rx="6" fill="#f3f3f5"/>
+    <g transform="translate(294, 200)" stroke="#86868b" stroke-width="1.8" fill="none">
+      <circle cx="6.5" cy="6.5" r="5"/>
+      <path d="m13 13-2.5-2.5" stroke-linecap="round"/>
+    </g>
+    <text x="308" y="212" fill="#86868b" font-size="12.5">Search filenames</text>
+
+    <g transform="translate(540, 194)">
+      <rect width="124" height="26" rx="6" fill="#f3f3f5"/>
+      <g transform="translate(11, 7)" stroke="#86868b" stroke-width="2" fill="none">
+        <path d="M0 0h7M0 3h5M0 6h3"/>
+      </g>
+      <text x="28" y="17" fill="#515158" font-size="12">Newest first</text>
+    </g>
+
+    <!-- Kind chips -->
+    <g transform="translate(284, 234)">
+      <rect width="74" height="22" rx="11" fill="rgba(10,132,255,0.10)" stroke="rgba(10,132,255,0.28)"/>
+      <circle cx="14" cy="11" r="3" fill="#0a84ff"/>
+      <text x="24" y="15" fill="#0a84ff" font-size="11.5">Photos</text>
+      <text x="58" y="15" fill="#0a84ff" font-size="11.5" opacity="0.7">312</text>
+    </g>
+    <g transform="translate(366, 234)">
+      <rect width="62" height="22" rx="11" fill="#f3f3f5"/>
+      <circle cx="14" cy="11" r="3" fill="#b56cff"/>
+      <text x="24" y="15" fill="#515158" font-size="11.5">Raw</text>
+      <text x="46" y="15" fill="#86868b" font-size="11.5">89</text>
+    </g>
+    <g transform="translate(436, 234)">
+      <rect width="78" height="22" rx="11" fill="#f3f3f5"/>
+      <circle cx="14" cy="11" r="3" fill="#ff9a3c"/>
+      <text x="24" y="15" fill="#515158" font-size="11.5">Videos</text>
+      <text x="62" y="15" fill="#86868b" font-size="11.5">82</text>
+    </g>
+
+    <!-- Date header -->
+    <text x="284" y="288" fill="#1d1d1f" font-size="13.5" font-weight="600">Today</text>
+    <text x="332" y="288" fill="#86868b" font-size="11.5">12 items</text>
+    <text x="1102" y="288" fill="#0a84ff" font-size="11.5" text-anchor="end">Deselect</text>
+
+    <!-- Thumb grid row 1 -->
+    <g transform="translate(284, 302)">
+      <rect width="132" height="132" rx="7" fill="url(#t1)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(424, 302)">
+      <rect width="132" height="132" rx="7" fill="url(#t2)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(564, 302)">
+      <rect width="132" height="132" rx="7" fill="url(#t3)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="108" y="108" width="18" height="18" rx="9" fill="rgba(0,0,0,0.55)"/>
+      <path d="m116 113 6 4-6 4z" fill="white"/>
+    </g>
+    <g transform="translate(704, 302)">
+      <rect width="132" height="132" rx="7" fill="url(#t4)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(844, 302)">
+      <rect width="132" height="132" rx="7" fill="url(#t5)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="6" y="6" width="28" height="14" rx="3" fill="rgba(0,0,0,0.55)"/>
+      <text x="20" y="16" fill="white" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="0.5">RAW</text>
+    </g>
+    <g transform="translate(984, 302)">
+      <rect width="132" height="132" rx="7" fill="url(#t6)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Date header 2 -->
+    <text x="284" y="478" fill="#1d1d1f" font-size="13.5" font-weight="600">Yesterday</text>
+    <text x="362" y="478" fill="#86868b" font-size="11.5">8 items</text>
+
+    <!-- Thumb grid row 2 -->
+    <g transform="translate(284, 492)">
+      <rect width="132" height="132" rx="7" fill="url(#t7)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(424, 492)">
+      <rect width="132" height="132" rx="7" fill="url(#t8)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(564, 492)">
+      <rect width="132" height="132" rx="7" fill="url(#t9)"/>
+      <circle cx="121" cy="11" r="9" fill="rgba(255,255,255,0.85)" stroke="rgba(0,0,0,0.18)" stroke-width="0.5"/>
+    </g>
+    <g transform="translate(704, 492)">
+      <rect width="132" height="132" rx="7" fill="url(#t10)"/>
+      <circle cx="121" cy="11" r="9" fill="#0a84ff" stroke="#0a84ff"/>
+      <path d="m116 11 3 3 6-7" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+
+    <!-- Bottom bar -->
+    <rect x="260" y="680" width="900" height="50" fill="rgba(245,245,247,0.85)"/>
+    <line x1="260" y1="680" x2="1160" y2="680" stroke="#000" stroke-opacity="0.07"/>
+    <text x="284" y="700" fill="#1d1d1f" font-size="12.5" font-weight="600">234</text>
+    <text x="304" y="700" fill="#515158" font-size="12.5">of 483 selected</text>
+    <text x="408" y="700" fill="#86868b" font-size="12.5">·</text>
+    <text x="420" y="700" fill="#86868b" font-size="12.5">12.4 GB</text>
+    <text x="284" y="716" fill="#86868b" font-size="11.5">to</text>
+    <text x="304" y="716" fill="#515158" font-size="11" font-family="ui-monospace, 'SF Mono', Menlo">~/Pictures/cardgrab</text>
+    <text x="450" y="716" fill="#0a84ff" font-size="11.5">Change…</text>
+
+    <!-- Glass Import button -->
+    <g transform="translate(950, 692)">
+      <rect width="190" height="30" rx="15" fill="url(#glass)" stroke="#ffffff" stroke-width="0.5"/>
+      <text x="95" y="20" fill="#0b1538" font-size="13" font-weight="600" text-anchor="middle">Import 234 items →</text>
+    </g>
+  </g>
+</svg>
