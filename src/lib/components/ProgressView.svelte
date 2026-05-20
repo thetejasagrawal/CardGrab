@@ -23,6 +23,9 @@
     try { await api.cancelImport(importId); } catch {}
   }
   function goHistory() { currentView.set({ kind: 'import-detail', importId }); }
+  function revealDestination() {
+    if (completed?.destRoot) api.revealInFinder(completed.destRoot);
+  }
 </script>
 
 <div class="view">
@@ -99,7 +102,10 @@
         <div class="done-title">Everything's on your Mac</div>
         <div class="done-sub">The card was never written to.</div>
         <div class="done-actions">
-          <Button variant="glass" size="md" onclick={goHistory}>Open import</Button>
+          <Button variant="primary" size="md" onclick={goHistory}>Open import</Button>
+          {#if completed.destRoot}
+            <Button variant="secondary" size="md" onclick={revealDestination}>Show in Finder</Button>
+          {/if}
         </div>
       </div>
     {/if}
@@ -202,7 +208,7 @@
   .done-symbol { color: var(--success); }
   .done-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin-top: 6px; }
   .done-sub { color: var(--text-secondary); font-size: 12.5px; }
-  .done-actions { margin-top: 14px; }
+  .done-actions { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
   .muted { color: var(--text-secondary); }
 </style>

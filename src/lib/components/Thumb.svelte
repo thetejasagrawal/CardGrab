@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { api, type MediaKind } from '../api';
+  import Icon from './Icon.svelte';
 
   let {
     src,
@@ -8,6 +9,7 @@
     name,
     selected = false,
     isVideo = false,
+    fit = 'contain',
     onClick,
   } = $props<{
     src: string;
@@ -15,6 +17,7 @@
     name: string;
     selected?: boolean;
     isVideo?: boolean;
+    fit?: 'contain' | 'cover';
     onClick?: (e: MouseEvent) => void;
   }>();
 
@@ -81,6 +84,7 @@
   class="thumb"
   class:selected
   class:has-image={loaded}
+  class:contain={fit === 'contain'}
   role="button"
   tabindex="0"
   aria-pressed={selected}
@@ -91,7 +95,7 @@
       onClick?.(e as unknown as MouseEvent);
     }
   }}
-  title={name}
+  aria-label={name}
 >
   {#if url && !failed}
     <img src={url} alt={name} onload={handleImgLoad} onerror={handleImgError} />
@@ -100,34 +104,22 @@
   {#if !loaded || failed || !previewable}
     <div class="placeholder kind-{kind}">
       {#if kind === 'photo'}
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="3" y="5" width="18" height="14" rx="2"/>
-          <circle cx="12" cy="12" r="3.5"/>
-        </svg>
+        <Icon name="photo" size={32} stroke={1.45} />
       {:else if kind === 'raw'}
         <span class="badge-text">RAW</span>
       {:else if kind === 'video'}
-        <svg viewBox="0 0 24 24" fill="currentColor">
-          <path d="M8 5v14l11-7z"/>
-        </svg>
+        <Icon name="play" size={32} />
       {:else if kind === 'audio'}
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M9 18V6l10-2v12"/>
-          <circle cx="6" cy="18" r="3"/>
-          <circle cx="16" cy="16" r="3"/>
-        </svg>
+        <Icon name="music" size={32} stroke={1.45} />
       {:else}
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
-          <path d="M14 3v6h6"/>
-        </svg>
+        <Icon name="file" size={32} stroke={1.45} />
       {/if}
     </div>
   {/if}
 
   {#if isVideo && loaded}
     <div class="play-overlay">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <Icon name="play" size={10} />
     </div>
   {/if}
 
@@ -136,9 +128,9 @@
   {/if}
 
   <div class="check">
-    <svg viewBox="0 0 16 16" fill="none">
-      <circle cx="8" cy="8" r="7" class="check-bg"/>
-      <path d="m5 8 2 2 4-5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="check-tick"/>
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="7" class="check-bg" />
+      <path d="m5 8 2 2 4-5" class="check-tick" />
     </svg>
   </div>
 </div>
@@ -178,11 +170,16 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center top;
     opacity: 0;
     transition: opacity 260ms var(--ease-out);
   }
   .thumb.has-image img {
     opacity: 1;
+  }
+  .thumb.contain img {
+    object-fit: contain;
+    object-position: center;
   }
 
   .placeholder {
@@ -192,12 +189,6 @@
     align-items: center;
     justify-content: center;
     color: var(--text-tertiary);
-  }
-  .placeholder svg {
-    width: 28%;
-    height: 28%;
-    max-width: 32px;
-    max-height: 32px;
   }
   .placeholder.kind-raw .badge-text {
     font-size: 11px;
@@ -220,9 +211,7 @@
     align-items: center;
     justify-content: center;
     color: white;
-    padding-left: 1px;
   }
-  .play-overlay svg { width: 9px; height: 9px; }
 
   .kind-tag {
     position: absolute;
@@ -264,6 +253,9 @@
   .check-tick {
     opacity: 0;
     stroke: #1a73ff;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .thumb.selected .check-bg {
     fill: var(--accent);

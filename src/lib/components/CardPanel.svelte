@@ -5,6 +5,7 @@
   import Button from './Button.svelte';
   import Thumb from './Thumb.svelte';
   import ImportSetup from './ImportSetup.svelte';
+  import Icon from './Icon.svelte';
 
   let { card } = $props<{ card: Card }>();
 
@@ -18,7 +19,9 @@
   // ---------- State ----------
   let searchQuery = $state('');
   type SortMode = 'date-desc' | 'date-asc';
+  type ViewMode = 'grid' | 'list';
   let sortMode = $state<SortMode>('date-desc');
+  let viewMode = $state<ViewMode>('grid');
   let kindFilter = $state<Set<MediaKind>>(new Set());
   let selection = $state<Set<string>>(new Set());
   let lastClickedKey: string | null = $state(null);
@@ -209,13 +212,35 @@
   }
 
   // ---------- Keyboard ----------
+  let searchInput: HTMLInputElement | null = $state(null);
+
   function onKey(e: KeyboardEvent) {
     const t = e.target as HTMLElement | null;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+    const isField = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT');
+
+    // Cmd/Ctrl + F → focus search (works even inside other inputs)
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      searchInput?.focus();
+      searchInput?.select();
+      return;
+    }
+
+    if (isField) return;
+
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a') {
       e.preventDefault();
       if (selection.size === visibleKeys.length) deselectAllVisible();
       else selectAllVisible();
+    } else if ((e.metaKey || e.ctrlKey) && e.key === '1') {
+      e.preventDefault();
+      viewMode = 'grid';
+    } else if ((e.metaKey || e.ctrlKey) && e.key === '2') {
+      e.preventDefault();
+      viewMode = 'list';
+    } else if (e.key === '/') {
+      e.preventDefault();
+      searchInput?.focus();
     } else if (e.key === 'Escape') {
       if (selection.size > 0) selection = new Set();
     }
@@ -240,6 +265,7 @@
       dest_root: defaultDest,
       pattern: defaultTemplate.pattern,
       collision: defaultCollision,
+      verify_hash: $settings?.verify_hash ?? false,
       worker_count: $settings?.worker_count ?? null,
     };
     try {
@@ -304,6 +330,22 @@
   function kindShortLabel(k: MediaKind): string {
     return { photo: 'Photos', raw: 'Raw', video: 'Videos', audio: 'Audio', sidecar: 'Sidecars', other: 'Other' }[k];
   }
+
+  function fileDateLabel(f: FileInfo): string {
+    const t = f.shot_at ?? f.mtime;
+    if (!t) return 'No date';
+    return new Date(t).toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+
+  function kindLabel(k: MediaKind): string {
+    return { photo: 'Photo', raw: 'Raw', video: 'Video', audio: 'Audio', sidecar: 'Sidecar', other: 'Other' }[k];
+  }
 </script>
 
 <svelte:window onkeydown={onKey} />
@@ -344,19 +386,11 @@
       </div>
     </div>
 
-    {#if isCamera}
-      <div class="note">
-        Camera mode pulls files over USB at ~25–40 MB/s. Pop the card out and use a reader for full speed when you can.
-      </div>
-    {/if}
-
     <div class="toolbar">
       <div class="search-wrap">
-        <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="7"/>
-          <path d="m20 20-3.5-3.5" stroke-linecap="round"/>
-        </svg>
+        <span class="search-icon"><Icon name="search" size={13} stroke={2} /></span>
         <input
+          bind:this={searchInput}
           class="search"
           type="text"
           bind:value={searchQuery}
@@ -368,42 +402,67 @@
         {/if}
       </div>
 
+      <div class="toolbar-spacer"></div>
+
       <button
         type="button"
-        class="sort-toggle"
+        class="tool-btn"
         onclick={() => (sortMode = sortMode === 'date-desc' ? 'date-asc' : 'date-desc')}
         title="Toggle sort direction"
       >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          {#if sortMode === 'date-desc'}
-            <path d="M3 6h13M3 12h9M3 18h5"/>
-          {:else}
-            <path d="M3 6h5M3 12h9M3 18h13"/>
-          {/if}
-        </svg>
-        <span>{sortMode === 'date-desc' ? 'Newest first' : 'Oldest first'}</span>
+        <Icon name={sortMode === 'date-desc' ? 'sort-desc' : 'sort-asc'} size={13} stroke={2} />
+        <span>{sortMode === 'date-desc' ? 'Newest' : 'Oldest'}</span>
       </button>
+
+      <div class="view-switch" data-mode={viewMode} aria-label="View mode">
+        <div class="view-indicator" aria-hidden="true"></div>
+        <button
+          type="button"
+          class:on={viewMode === 'grid'}
+          onclick={() => (viewMode = 'grid')}
+          title="Grid"
+          aria-label="Grid"
+        >
+          <Icon name="grid" size={13} stroke={1.9} />
+        </button>
+        <button
+          type="button"
+          class:on={viewMode === 'list'}
+          onclick={() => (viewMode = 'list')}
+          title="List"
+          aria-label="List"
+        >
+          <Icon name="list" size={14} stroke={1.9} />
+        </button>
+      </div>
     </div>
 
     {#if availableKinds.length > 1}
-      <div class="chips">
+      <div class="chips" role="tablist" aria-label="Filter by kind">
+        <button
+          type="button"
+          class="chip"
+          class:on={kindFilter.size === 0}
+          onclick={() => (kindFilter = new Set())}
+          role="tab"
+          aria-selected={kindFilter.size === 0}
+        >
+          <span>All</span>
+          <span class="chip-count">{scanReport.files.length.toLocaleString()}</span>
+        </button>
         {#each availableKinds as k}
           <button
             type="button"
             class="chip"
             class:on={kindFilter.has(k.kind)}
             onclick={() => toggleKind(k.kind)}
+            role="tab"
+            aria-selected={kindFilter.has(k.kind)}
           >
-            <span class="chip-dot dot-{k.kind}"></span>
             <span>{kindShortLabel(k.kind)}</span>
             <span class="chip-count">{k.count.toLocaleString()}</span>
           </button>
         {/each}
-        {#if kindFilter.size > 0}
-          <button type="button" class="chip clear-chip" onclick={() => (kindFilter = new Set())}>
-            Clear
-          </button>
-        {/if}
       </div>
     {/if}
 
@@ -414,7 +473,7 @@
           : "No files match the filters."}
       </div>
     {:else}
-      <div class="grid-scroll">
+      <div class="grid-scroll" class:list-mode={viewMode === 'list'}>
         {#each groups as g (g.key)}
           {#if g.label}
             <div class="group-head">
@@ -427,18 +486,44 @@
               </button>
             </div>
           {/if}
-          <div class="grid">
-            {#each g.files as f (f.src_abs)}
-              <Thumb
-                src={f.src_abs}
-                kind={f.kind}
-                name={f.orig_name}
-                selected={selection.has(fileKey(f))}
-                isVideo={f.kind === 'video'}
-                onClick={(e) => toggle(f, e)}
-              />
-            {/each}
-          </div>
+          {#if viewMode === 'list'}
+            <div class="file-list">
+              {#each g.files as f (f.src_abs)}
+                <button
+                  type="button"
+                  class="file-row"
+                  class:selected={selection.has(fileKey(f))}
+                  onclick={(e) => toggle(f, e)}
+                  title={f.src_rel}
+                >
+                  <span class="row-check" aria-hidden="true">
+                    {#if selection.has(fileKey(f))}<span>✓</span>{/if}
+                  </span>
+                  <span class="row-name">{f.orig_name}</span>
+                  <span class="row-kind">{kindLabel(f.kind)}</span>
+                  <span class="row-date">{fileDateLabel(f)}</span>
+                  <span class="row-size">{formatBytes(f.bytes)}</span>
+                </button>
+              {/each}
+            </div>
+          {:else}
+            <div class="grid">
+              {#each g.files as f (f.src_abs)}
+                <div class="cell">
+                  <Thumb
+                    src={f.src_abs}
+                    kind={f.kind}
+                    name={f.orig_name}
+                    selected={selection.has(fileKey(f))}
+                    isVideo={f.kind === 'video'}
+                    fit="contain"
+                    onClick={(e) => toggle(f, e)}
+                  />
+                  <div class="cell-caption" title={f.orig_name}>{f.orig_name}</div>
+                </div>
+              {/each}
+            </div>
+          {/if}
         {/each}
       </div>
     {/if}
@@ -469,7 +554,7 @@
       </div>
       <div class="bar-right">
         <Button
-          variant="glass"
+          variant="primary"
           size="md"
           disabled={selectedCount === 0 || starting}
           loading={starting}
@@ -530,6 +615,11 @@
     gap: 2px;
     flex-shrink: 0;
     min-width: 0;
+    animation: fade-in-up 320ms var(--ease-out) both;
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .hero-eyebrow {
     font-size: 10.5px;
@@ -559,32 +649,22 @@
   .sep { opacity: 0.5; margin: 0 4px; }
   .dim { color: var(--text-tertiary); }
 
-  .note {
-    margin: 10px var(--panel-pad-x) 0;
-    font-size: 12px;
-    line-height: 1.55;
-    color: var(--text-secondary);
-    background: var(--bg-surface);
-    border-radius: var(--radius-sm);
-    padding: 9px 12px;
-    flex-shrink: 0;
-  }
-
   .toolbar {
     padding: 14px var(--panel-pad-x) 6px;
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
     flex-shrink: 0;
     flex-wrap: wrap;
     row-gap: 8px;
   }
 
+  .toolbar-spacer { flex: 1; }
+
   .search-wrap {
     position: relative;
-    flex: 1;
+    flex: 0 1 260px;
     min-width: 180px;
-    max-width: 340px;
   }
   .search-icon {
     position: absolute;
@@ -626,70 +706,125 @@
   }
   .clear:hover { color: var(--text-primary); }
 
-  .sort-toggle {
+  .tool-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     height: 26px;
-    padding: 0 11px;
+    padding: 0 10px;
     font-size: 12px;
     color: var(--text-secondary);
     background: var(--bg-surface);
     border-radius: 6px;
-    transition: background var(--transition), color var(--transition);
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.04);
+    transition:
+      background 130ms var(--ease-snap),
+      color 130ms var(--ease-snap),
+      box-shadow 130ms var(--ease-snap),
+      transform 180ms var(--ease-spring);
     flex-shrink: 0;
   }
-  .sort-toggle svg { color: var(--text-tertiary); }
-  .sort-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
-  .sort-toggle:hover svg { color: var(--text-secondary); }
+  .tool-btn :global(.icon) { color: var(--text-tertiary); transition: color 130ms var(--ease-snap); }
+  .tool-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  }
+  .tool-btn:hover :global(.icon) { color: var(--text-secondary); }
+  .tool-btn:active {
+    transform: scale(0.96);
+    transition-duration: 80ms;
+    box-shadow:
+      inset 0 1px 1px rgba(0, 0, 0, 0.08),
+      inset 0 0 0 0.5px rgba(0, 0, 0, 0.08);
+  }
+
+  .view-switch {
+    position: relative;
+    display: inline-flex;
+    height: 26px;
+    padding: 2px;
+    border-radius: 7px;
+    background: var(--bg-surface);
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+  }
+  .view-indicator {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    width: 28px;
+    border-radius: 5px;
+    background: var(--bg-card);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.10),
+      0 0 0 0.5px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.80);
+    transition: transform 260ms var(--ease-spring);
+    pointer-events: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    .view-indicator {
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.34),
+        0 0 0 0.5px rgba(0, 0, 0, 0.40),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+  }
+  .view-switch[data-mode="list"] .view-indicator { transform: translateX(28px); }
+  .view-switch button {
+    position: relative;
+    z-index: 1;
+    width: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 5px;
+    color: var(--text-tertiary);
+    transition:
+      color 180ms var(--ease-snap),
+      transform 180ms var(--ease-spring);
+  }
+  .view-switch button:hover { color: var(--text-secondary); }
+  .view-switch button.on { color: var(--text-primary); }
+  .view-switch button:active { transform: scale(0.92); transition-duration: 90ms; }
 
   .chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px var(--panel-pad-x) 2px;
+    gap: 4px;
+    padding: 6px var(--panel-pad-x) 2px;
     flex-shrink: 0;
   }
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
+    padding: 3px 10px;
     border-radius: 999px;
     font-size: 11.5px;
-    background: var(--bg-surface);
+    background: transparent;
     color: var(--text-secondary);
-    border: 1px solid transparent;
-    transition: background var(--transition), color var(--transition), border var(--transition);
+    transition:
+      background 160ms var(--ease-snap),
+      color 160ms var(--ease-snap),
+      transform 200ms var(--ease-spring),
+      box-shadow 160ms var(--ease-snap);
     line-height: 1.2;
   }
-  .chip:hover { background: var(--bg-hover); }
+  .chip:hover { background: var(--bg-hover); color: var(--text-primary); }
   .chip.on {
     background: var(--bg-selected);
-    border-color: rgba(10, 132, 255, 0.28);
     color: var(--accent);
+    box-shadow: inset 0 0 0 0.5px color-mix(in srgb, var(--accent) 35%, transparent);
   }
-  .chip-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--text-tertiary);
-  }
-  .chip.on .chip-dot { background: var(--accent); }
-  .dot-photo { background: #4f9cff; }
-  .dot-raw   { background: #b56cff; }
-  .dot-video { background: #ff9a3c; }
-  .dot-audio { background: #46c97b; }
-  .dot-sidecar { background: #c9c9d2; }
-  .dot-other { background: #888894; }
+  .chip:active { transform: scale(0.94); transition-duration: 90ms; }
   .chip-count {
     font-variant-numeric: tabular-nums;
     color: var(--text-tertiary);
-    margin-left: 2px;
+    font-size: 11px;
   }
-  .chip.on .chip-count { color: var(--accent); opacity: 0.8; }
-  .clear-chip { background: transparent; color: var(--text-tertiary); }
-  .clear-chip:hover { color: var(--text-primary); }
+  .chip.on .chip-count { color: var(--accent); opacity: 0.72; }
 
   .grid-scroll {
     flex: 1;
@@ -697,21 +832,21 @@
     padding: 8px 0 20px;
     min-height: 0;
   }
+  .grid-scroll.list-mode {
+    padding-bottom: 10px;
+  }
 
   .group-head {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    padding: 12px var(--panel-pad-x) 8px;
+    padding: 14px var(--panel-pad-x) 10px;
     position: sticky;
     top: 0;
-    background: rgba(245, 245, 247, 0.82);
-    backdrop-filter: saturate(180%) blur(20px);
-    -webkit-backdrop-filter: saturate(180%) blur(20px);
-    z-index: 2;
-  }
-  @media (prefers-color-scheme: dark) {
-    .group-head { background: rgba(30, 30, 30, 0.78); }
+    background: var(--bg-content);
+    border-bottom: 1px solid var(--divider);
+    z-index: 3;
+    animation: fade-in-up 280ms var(--ease-out) both;
   }
   .group-title {
     display: flex;
@@ -739,16 +874,103 @@
     color: var(--accent);
     padding: 2px 8px;
     border-radius: 4px;
-    transition: background var(--transition);
+    transition:
+      background 140ms var(--ease-snap),
+      transform 180ms var(--ease-spring);
     flex-shrink: 0;
   }
   .group-select:hover { background: var(--bg-hover); }
+  .group-select:active { transform: scale(0.94); transition-duration: 80ms; }
 
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+    gap: 14px 10px;
     padding: 0 var(--panel-pad-x);
+  }
+  .cell {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+  .cell-caption {
+    font-size: 11px;
+    line-height: 1.25;
+    color: var(--text-secondary);
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 2px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .file-list {
+    margin: 0 var(--panel-pad-x);
+    border: 1px solid var(--divider);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-card);
+  }
+  .file-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 20px minmax(160px, 1fr) 76px 150px 82px;
+    gap: 12px;
+    align-items: center;
+    min-height: 34px;
+    padding: 6px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--divider);
+    color: var(--text-primary);
+    transition: background var(--transition);
+  }
+  .file-row:last-child { border-bottom: none; }
+  .file-row:hover { background: var(--bg-hover); }
+  .file-row.selected { background: var(--bg-selected); }
+  .row-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid var(--divider-strong);
+    display: grid;
+    place-items: center;
+    color: white;
+    font-size: 11px;
+    line-height: 1;
+  }
+  .file-row.selected .row-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .row-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  .row-kind,
+  .row-date,
+  .row-size {
+    font-size: 11.5px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .row-size {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 960px) {
+    .file-row {
+      grid-template-columns: 20px minmax(120px, 1fr) 70px 76px;
+    }
+    .row-date { display: none; }
   }
 
   .empty-scan {

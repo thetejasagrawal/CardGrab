@@ -59,7 +59,20 @@ fn scan_volumes() -> Vec<PathBuf> {
             }
         }
     }
+    if let Ok(mock) = std::env::var("CARDGRAB_MOCK_DIR") {
+        let p = PathBuf::from(mock);
+        if p.is_dir() && !out.contains(&p) {
+            out.push(p);
+        }
+    }
     out
+}
+
+fn is_mock_volume(path: &Path) -> bool {
+    std::env::var("CARDGRAB_MOCK_DIR")
+        .ok()
+        .map(PathBuf::from)
+        .is_some_and(|m| m == path)
 }
 
 fn quick_camera_model(root: &Path) -> Option<String> {
@@ -149,10 +162,15 @@ pub async fn watch_loop(app: AppHandle) {
             std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 let mut cards = Vec::new();
                 for vol in scan_volumes() {
-                    let layout = is_camera_card(&vol);
-                    if layout.is_empty() {
-                        continue;
-                    }
+                    let layout = if is_mock_volume(&vol) {
+                        vec!["MOCK".to_string()]
+                    } else {
+                        let l = is_camera_card(&vol);
+                        if l.is_empty() {
+                            continue;
+                        }
+                        l
+                    };
                     let card_result =
                         std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                             build_sd_card(&vol, layout.clone())

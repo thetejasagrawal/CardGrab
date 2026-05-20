@@ -10,16 +10,38 @@
     type Card,
   } from './lib/api';
 
-  // Explicit window-drag handler. WKWebView (which Tauri uses on macOS) does NOT
-  // support -webkit-app-region: drag (Chromium-only extension), so JS is the
-  // only path. Attached in capture phase so no child can swallow the mousedown.
-  function handleWindowDrag(e: MouseEvent) {
+  let pendingDrag: { x: number; y: number; region: HTMLElement } | null = null;
+
+  // WKWebView on macOS does not support Chromium's -webkit-app-region.
+  // Start dragging only after a small pointer move so ordinary clicks inside
+  // titlebars still behave like clicks.
+  function canStartWindowDrag(target: HTMLElement | null) {
+    if (!target) return null;
+    if (target.closest('button, input, textarea, select, a, [contenteditable="true"], .no-drag')) {
+      return null;
+    }
+    return target.closest('[data-tauri-drag-region]') as HTMLElement | null;
+  }
+
+  function handleDragMouseDown(e: MouseEvent) {
     if (e.button !== 0) return;
     const target = e.target as HTMLElement | null;
-    if (!target) return;
-    if (target.closest('button, input, textarea, select, a, [contenteditable="true"]')) return;
-    if (!target.closest('[data-tauri-drag-region]')) return;
+    const region = canStartWindowDrag(target);
+    if (!region) return;
+    pendingDrag = { x: e.clientX, y: e.clientY, region };
+  }
+
+  function handleDragMouseMove(e: MouseEvent) {
+    if (!pendingDrag || e.buttons !== 1) return;
+    const dx = Math.abs(e.clientX - pendingDrag.x);
+    const dy = Math.abs(e.clientY - pendingDrag.y);
+    if (dx < 3 && dy < 3) return;
+    pendingDrag = null;
     getCurrentWindow().startDragging().catch((err) => console.error('startDragging:', err));
+  }
+
+  function clearPendingDrag() {
+    pendingDrag = null;
   }
   import {
     cards,
@@ -41,7 +63,10 @@
   onMount(() => {
     // Attach drag handler at document capture phase — guarantees we run before
     // any child stopPropagation can swallow the mousedown.
-    document.addEventListener('mousedown', handleWindowDrag, true);
+    document.addEventListener('mousedown', handleDragMouseDown, true);
+    document.addEventListener('mousemove', handleDragMouseMove, true);
+    document.addEventListener('mouseup', clearPendingDrag, true);
+    document.addEventListener('mouseleave', clearPendingDrag, true);
 
     // Initial loads
     Promise.all([
@@ -71,7 +96,7 @@
     unsubs.push(onImportComplete((c) => {
       lastCompleted.set({
         importId: c.import_id,
-        destRoot: '',
+        destRoot: c.dest_root,
         status: c.status,
         fileCount: c.file_count,
         bytesTotal: c.bytes_total,
@@ -80,7 +105,10 @@
     }));
 
     return () => {
-      document.removeEventListener('mousedown', handleWindowDrag, true);
+      document.removeEventListener('mousedown', handleDragMouseDown, true);
+      document.removeEventListener('mousemove', handleDragMouseMove, true);
+      document.removeEventListener('mouseup', clearPendingDrag, true);
+      document.removeEventListener('mouseleave', clearPendingDrag, true);
       unsubs.forEach((p) => p.then((u) => u()).catch(() => {}));
     };
   });

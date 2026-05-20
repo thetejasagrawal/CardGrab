@@ -1,12 +1,15 @@
 <script lang="ts">
   import { cards, currentView, toolStatus, type View } from '../stores';
+  import Icon from './Icon.svelte';
 
   function select(v: View) {
     currentView.set(v);
   }
 
-  let sdCards = $derived($cards.filter((c) => c.kind === 'sd'));
-  let cameras = $derived($cards.filter((c) => c.kind === 'camera'));
+  let sources = $derived([...$cards].sort((a, b) => {
+    const order = { sd: 0, camera: 1 };
+    return order[a.kind] - order[b.kind] || a.label.localeCompare(b.label);
+  }));
 
   let isHistory = $derived(
     $currentView.kind === 'history' || $currentView.kind === 'import-detail'
@@ -16,94 +19,90 @@
   function isCardSelected(mount: string) {
     return $currentView.kind === 'card' && $currentView.mount === mount;
   }
+
+  function sourceKindLabel(kind: string) {
+    return kind === 'camera' ? 'Camera' : 'Card';
+  }
 </script>
 
 <aside class="sidebar">
   <div class="titlebar-region" data-tauri-drag-region></div>
 
-  <nav class="nav no-drag">
-    <section>
-      <h2>Cards</h2>
-      {#if sdCards.length === 0}
-        <p class="empty">None connected</p>
+  <nav class="nav no-drag" aria-label="Main">
+    <section class="source-section">
+      <div class="section-head">
+        <h2>Cards</h2>
+        {#if sources.length > 0}
+          <span class="section-count">{sources.length}</span>
+        {/if}
+      </div>
+
+      {#if sources.length === 0}
+        <div class="source-empty">
+          <div class="empty-icon"><Icon name="sd-card" size={18} stroke={1.6} /></div>
+          <div>
+            <div class="empty-title">No card connected</div>
+            <div class="empty-sub">Insert an SD card or plug in a camera.</div>
+          </div>
+        </div>
+
+        {#if $toolStatus && !$toolStatus.gphoto2_installed}
+          <button class="setup-card" onclick={() => select({ kind: 'settings' })}>
+            <span class="setup-icon"><Icon name="camera" size={15} /></span>
+            <span>
+              <span class="setup-title">Enable camera mode</span>
+              <span class="setup-sub">Install gphoto2 for USB import</span>
+            </span>
+          </button>
+        {/if}
       {:else}
-        {#each sdCards as c (c.mount)}
+        <div class="source-list">
+        {#each sources as c (c.mount)}
           <button
-            class="row"
+            class="source-row"
             class:selected={isCardSelected(c.mount)}
+            aria-current={isCardSelected(c.mount) ? 'page' : undefined}
             onclick={() => select({ kind: 'card', mount: c.mount })}
           >
-            <svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"
-                stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <path d="M10.5 6v2.5M12.5 6v2.5M14.5 6v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="label">{c.label}</span>
+            <span class="source-ico">
+              <Icon name={c.kind === 'camera' ? 'camera' : 'sd-card'} size={16} />
+            </span>
+            <span class="source-copy">
+              <span class="source-name">{c.label}</span>
+              <span class="source-meta">
+                {sourceKindLabel(c.kind)}
+                {#if c.camera_model && c.camera_model !== c.label}
+                  · {c.camera_model}
+                {/if}
+              </span>
+            </span>
           </button>
         {/each}
+        </div>
       {/if}
-    </section>
-
-    <section>
-      <h2>Cameras</h2>
-      {#if $toolStatus && !$toolStatus.gphoto2_installed}
-        <button class="row subtle" onclick={() => select({ kind: 'settings' })}>
-          <svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M9 4h6l1.6 2.4H21a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.4a1 1 0 0 1 1-1h4.4L9 4Z"
-              stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="1.5"/>
-          </svg>
-          <span class="label">Set up camera mode</span>
-        </button>
-      {:else if cameras.length === 0}
-        <p class="empty">None connected</p>
-      {:else}
-        {#each cameras as c (c.mount)}
-          <button
-            class="row"
-            class:selected={isCardSelected(c.mount)}
-            onclick={() => select({ kind: 'card', mount: c.mount })}
-          >
-            <svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M9 4h6l1.6 2.4H21a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7.4a1 1 0 0 1 1-1h4.4L9 4Z"
-                stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-              <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            <span class="label">{c.label}</span>
-          </button>
-        {/each}
-      {/if}
-    </section>
-
-    <section>
-      <h2>Library</h2>
-      <button
-        class="row"
-        class:selected={isHistory}
-        onclick={() => select({ kind: 'history' })}
-      >
-        <svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        <span class="label">History</span>
-      </button>
     </section>
   </nav>
 
-  <div class="bottom no-drag">
+  <div class="bottom no-drag" aria-label="Library and settings">
+    <button
+      class="row"
+      class:selected={isHistory}
+      aria-current={isHistory ? 'page' : undefined}
+      onclick={() => select({ kind: 'history' })}
+    >
+      <span class="ico"><Icon name="clock" size={15} /></span>
+      <span class="label">Import history</span>
+    </button>
     <button
       class="row"
       class:selected={isSettings}
+      aria-current={isSettings ? 'page' : undefined}
       onclick={() => select({ kind: 'settings' })}
     >
-      <svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="2.5" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.86l.06.07a2 2 0 1 1-2.83 2.83l-.07-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.55V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1.1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.07a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1.04H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.64 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.07a2 2 0 1 1 2.83-2.83l.07.06a1.7 1.7 0 0 0 1.86.34H9a1.7 1.7 0 0 0 1.04-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1.04 1.55 1.7 1.7 0 0 0 1.86-.34l.07-.06a2 2 0 1 1 2.83 2.83l-.06.07a1.7 1.7 0 0 0-.34 1.86V9a1.7 1.7 0 0 0 1.55 1.04H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1.04Z"
-          stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      <span class="ico"><Icon name="gear" size={15} /></span>
       <span class="label">Settings</span>
     </button>
+    <div class="wordmark">cardgrab</div>
   </div>
 </aside>
 
@@ -113,7 +112,7 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    padding: 0 8px 8px;
+    padding: 0 10px 10px;
     background: var(--bg-sidebar);
     border-right: 1px solid var(--divider);
     backdrop-filter: saturate(180%) blur(30px);
@@ -128,12 +127,20 @@
   .nav {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     flex: 1;
     overflow-y: auto;
+    padding-top: 4px;
   }
 
-  section { display: flex; flex-direction: column; gap: 1px; }
+  section { display: flex; flex-direction: column; gap: 6px; }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+  }
 
   h2 {
     font-size: 11px;
@@ -141,15 +148,154 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-tertiary);
-    margin: 0 0 4px;
-    padding: 0 10px;
+    margin: 0;
   }
 
-  .empty {
-    margin: 0;
-    padding: 2px 10px 4px;
-    font-size: 12px;
+  .section-count {
+    font-size: 10.5px;
     color: var(--text-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .source-empty {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    margin: 0 2px;
+    padding: 10px 8px;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.25);
+    border: 1px solid var(--divider);
+  }
+  @media (prefers-color-scheme: dark) {
+    .source-empty { background: rgba(255,255,255,0.035); }
+  }
+  .empty-icon {
+    color: var(--text-tertiary);
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+  .empty-title {
+    color: var(--text-primary);
+    font-size: 12.5px;
+    font-weight: 550;
+    line-height: 1.25;
+  }
+  .empty-sub {
+    margin-top: 2px;
+    color: var(--text-tertiary);
+    font-size: 11.5px;
+    line-height: 1.35;
+  }
+
+  .setup-card {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    gap: 8px;
+    text-align: left;
+    align-items: start;
+    margin: 0 2px;
+    padding: 8px;
+    border-radius: 8px;
+    color: var(--text-primary);
+    background: rgba(255, 159, 10, 0.10);
+    border: 1px solid rgba(255, 159, 10, 0.18);
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .setup-card:hover {
+    background: rgba(255, 159, 10, 0.15);
+    border-color: rgba(255, 159, 10, 0.28);
+  }
+  .setup-icon { color: var(--warning); margin-top: 1px; }
+  .setup-title {
+    display: block;
+    font-size: 12px;
+    font-weight: 550;
+    line-height: 1.25;
+  }
+  .setup-sub {
+    display: block;
+    margin-top: 1px;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--text-secondary);
+  }
+
+  .source-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .source-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    text-align: left;
+    color: var(--text-primary);
+    transition:
+      background 160ms var(--ease-snap),
+      color 160ms var(--ease-snap),
+      box-shadow 160ms var(--ease-snap),
+      transform 200ms var(--ease-spring);
+  }
+  .source-row:hover { background: var(--bg-hover); }
+  .source-row:active { transform: scale(0.985); transition-duration: 90ms; }
+  .source-row.selected {
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 88%, white),
+      var(--accent));
+    color: var(--text-on-accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.14),
+      0 1px 1px rgba(0, 0, 0, 0.08);
+  }
+  .source-ico {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    color: var(--accent);
+    background: var(--bg-selected);
+    transition: background 160ms var(--ease-snap), color 160ms var(--ease-snap);
+  }
+  .source-row.selected .source-ico {
+    background: rgba(255,255,255,0.20);
+    color: var(--text-on-accent);
+    box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.12);
+  }
+  .source-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .source-name {
+    font-size: 13px;
+    line-height: 1.2;
+    font-weight: 550;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .source-meta {
+    font-size: 11px;
+    line-height: 1.25;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .source-row.selected .source-meta {
+    color: rgba(255,255,255,0.74);
   }
 
   .row {
@@ -157,24 +303,38 @@
     display: flex;
     align-items: center;
     gap: 7px;
-    padding: 4px 10px;
-    height: 26px;
-    border-radius: 5px;
+    padding: 5px 8px;
+    min-height: 30px;
+    border-radius: 7px;
     text-align: left;
     color: var(--text-primary);
-    transition: background var(--transition);
+    transition:
+      background 160ms var(--ease-snap),
+      color 160ms var(--ease-snap),
+      box-shadow 160ms var(--ease-snap),
+      transform 200ms var(--ease-spring);
   }
   .row:hover { background: var(--bg-hover); }
+  .row:active { transform: scale(0.985); transition-duration: 90ms; }
   .row.selected {
-    background: var(--accent);
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--accent) 88%, white),
+      var(--accent));
     color: var(--text-on-accent);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.14),
+      0 1px 1px rgba(0, 0, 0, 0.08);
   }
   .row.selected .ico { color: var(--text-on-accent); }
-  .row.subtle .ico { color: var(--warning); }
 
   .ico {
     color: var(--text-secondary);
     flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 15px;
+    height: 15px;
   }
 
   .label {
@@ -188,8 +348,21 @@
 
   .bottom {
     flex-shrink: 0;
-    padding-top: 6px;
+    padding-top: 8px;
     border-top: 1px solid var(--divider);
-    margin-top: 4px;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .wordmark {
+    margin-top: 6px;
+    padding: 4px 8px 0;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    color: var(--text-tertiary);
+    opacity: 0.7;
+    user-select: none;
   }
 </style>

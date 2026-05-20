@@ -81,6 +81,8 @@ pub struct ScanReport {
     pub audio_count: usize,
     pub sidecar_count: usize,
     pub other_count: usize,
+    #[serde(default)]
+    pub permission_denied: bool,
     pub camera_model: Option<String>,
     pub earliest: Option<DateTime<Utc>>,
     pub latest: Option<DateTime<Utc>>,
@@ -138,14 +140,31 @@ pub fn scan(root: &Path) -> AppResult<ScanReport> {
     let mut camera_model: Option<String> = None;
     let mut earliest: Option<DateTime<Utc>> = None;
     let mut latest: Option<DateTime<Utc>> = None;
+    let mut walk_errors: u32 = 0;
+    let mut entries_seen: u32 = 0;
+    let mut permission_denied = false;
 
     for entry in WalkDir::new(root).into_iter().filter_entry(|e| {
         // skip system junk at any depth
         !is_system_junk(e.path())
     }) {
+        entries_seen += 1;
         let entry = match entry {
             Ok(e) => e,
-            Err(_) => continue,
+            Err(e) => {
+                walk_errors += 1;
+                if let Some(io) = e.io_error() {
+                    if matches!(io.kind(), std::io::ErrorKind::PermissionDenied)
+                        || io.raw_os_error() == Some(1)
+                    {
+                        permission_denied = true;
+                    }
+                }
+                if walk_errors <= 3 {
+                    eprintln!("[scanner] walk error at {:?}: {}", root, e);
+                }
+                continue;
+            }
         };
         if !entry.file_type().is_file() {
             continue;
@@ -209,6 +228,14 @@ pub fn scan(root: &Path) -> AppResult<ScanReport> {
         });
     }
 
+    eprintln!(
+        "[scanner] {:?} → entries_seen={} files={} walk_errors={}",
+        root,
+        entries_seen,
+        files.len(),
+        walk_errors
+    );
+
     let total_bytes: u64 = files.iter().map(|f| f.bytes).sum();
     let photo_count = files.iter().filter(|f| f.kind == MediaKind::Photo).count();
     let raw_count = files.iter().filter(|f| f.kind == MediaKind::Raw).count();
@@ -227,6 +254,7 @@ pub fn scan(root: &Path) -> AppResult<ScanReport> {
         audio_count,
         sidecar_count,
         other_count,
+        permission_denied,
         camera_model,
         earliest,
         latest,
@@ -245,11 +273,6 @@ pub async fn scan_camera(port: &str, camera_model: &str) -> AppResult<ScanReport
                 .next()
                 .map(|s| s.to_ascii_lowercase())
                 .unwrap_or_default();
-            let orig = std::path::Path::new(&f.name)
-                .file_stem()
-                .and_then(|s| s.to_str())
-                .unwrap_or(&f.name)
-                .to_string();
             FileInfo {
                 src_abs: PathBuf::from(format!("camera://{}/{}", port, f.name)),
                 src_rel: PathBuf::from(&f.name),
@@ -285,6 +308,7 @@ pub async fn scan_camera(port: &str, camera_model: &str) -> AppResult<ScanReport
         audio_count,
         sidecar_count,
         other_count,
+        permission_denied: false,
         camera_model: Some(camera_model.to_string()),
         earliest: None,
         latest: None,

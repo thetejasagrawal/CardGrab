@@ -1,6 +1,9 @@
 import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import { listen, type Event as TauriEvent } from '@tauri-apps/api/event';
 
+const fileSrcCache = new Map<string, string>();
+const thumbnailCache = new Map<string, Promise<string>>();
+
 // ---------- Types ----------
 
 export type MediaKind = 'photo' | 'raw' | 'video' | 'audio' | 'sidecar' | 'other';
@@ -119,6 +122,7 @@ export interface ImportProgress {
 export interface ImportCompleted {
   import_id: string;
   status: string;
+  dest_root: string;
   file_count: number;
   bytes_total: number;
   failures: number;
@@ -131,6 +135,7 @@ export interface StartImportArgs {
   dest_root: string;
   pattern: string;
   collision: 'skip' | 'rename' | 'overwrite';
+  verify_hash: boolean;
   worker_count: number | null;
 }
 
@@ -159,9 +164,26 @@ export const api = {
   listTemplates: () => invoke<TemplateRow[]>('list_templates'),
   saveTemplate: (template: TemplateRow) => invoke<void>('save_template', { template }),
   deleteTemplate: (id: string) => invoke<void>('delete_template', { id }),
+  fileSrc: (src: string) => {
+    let cached = fileSrcCache.get(src);
+    if (!cached) {
+      cached = convertFileSrc(src);
+      fileSrcCache.set(src, cached);
+    }
+    return cached;
+  },
   getThumbnail: async (src: string): Promise<string> => {
-    const path = await invoke<string>('get_thumbnail', { src });
-    return convertFileSrc(path);
+    let pending = thumbnailCache.get(src);
+    if (!pending) {
+      pending = invoke<string>('get_thumbnail', { src })
+        .then((path) => api.fileSrc(path))
+        .catch((err) => {
+          thumbnailCache.delete(src);
+          throw err;
+        });
+      thumbnailCache.set(src, pending);
+    }
+    return pending;
   },
 };
 

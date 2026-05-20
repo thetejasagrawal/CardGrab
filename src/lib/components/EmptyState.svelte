@@ -1,15 +1,12 @@
 <script lang="ts">
   import { toolStatus } from '../stores';
+  import Icon from './Icon.svelte';
 </script>
 
-<div class="empty" data-tauri-drag-region>
+<div class="empty">
   <div class="stack">
     <div class="symbol" aria-hidden="true">
-      <svg width="56" height="56" viewBox="0 0 24 24" fill="none">
-        <path d="M7 3h7l5 5v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"
-          stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-        <path d="M10.5 6v2.5M12.5 6v2.5M14.5 6v2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-      </svg>
+      <Icon name="sd-card" size={54} stroke={1.35} />
     </div>
     <h1>No card connected</h1>
     <p>Plug in an SD card or a camera. cardgrab will pick it up automatically.</p>
@@ -36,12 +33,22 @@
     align-items: center;
     text-align: center;
     max-width: 360px;
+    animation: empty-in 420ms var(--ease-out) both;
+  }
+  @keyframes empty-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   .symbol {
     color: var(--text-tertiary);
     margin-bottom: 14px;
     opacity: 0.65;
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
   }
 
   h1 {

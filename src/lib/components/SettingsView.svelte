@@ -2,10 +2,50 @@
   import { api, type Settings } from '../api';
   import { settings, templates, toolStatus } from '../stores';
   import Button from './Button.svelte';
+  import { open as openUrl } from '@tauri-apps/plugin-shell';
+
+  const APP_VERSION = '0.1.1';
+  const RELEASES_URL = 'https://github.com/thetejasagrawal/CardGrab/releases';
 
   let local = $state<Settings | null>(null);
   let savedIndicator = $state(false);
   let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  type UpdateState = 'idle' | 'checking' | 'up-to-date' | 'available' | 'error';
+  let updateState = $state<UpdateState>('idle');
+  let latestVersion = $state<string | null>(null);
+
+  function compareVersions(a: string, b: string): number {
+    const pa = a.replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+    const pb = b.replace(/^v/, '').split('.').map((n) => parseInt(n, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const x = pa[i] ?? 0;
+      const y = pb[i] ?? 0;
+      if (x !== y) return x - y;
+    }
+    return 0;
+  }
+
+  async function checkForUpdates() {
+    updateState = 'checking';
+    try {
+      const res = await fetch('https://api.github.com/repos/thetejasagrawal/CardGrab/releases/latest', {
+        headers: { Accept: 'application/vnd.github+json' },
+      });
+      if (!res.ok) throw new Error(`GitHub ${res.status}`);
+      const data = await res.json();
+      const tag = (data.tag_name ?? '').replace(/^v/, '');
+      latestVersion = tag || null;
+      if (tag && compareVersions(tag, APP_VERSION) > 0) updateState = 'available';
+      else updateState = 'up-to-date';
+    } catch {
+      updateState = 'error';
+    }
+  }
+
+  function openReleases() {
+    openUrl(RELEASES_URL).catch(() => {});
+  }
 
   $effect(() => {
     if ($settings && !local) local = { ...$settings };
@@ -163,6 +203,61 @@
           {/each}
         </div>
       </section>
+
+      <section>
+        <h3>About</h3>
+        <div class="group about">
+          <div class="about-head">
+            <img class="about-icon" src="/cardgrab-icon.png" alt="cardgrab" />
+            <div class="about-meta">
+              <div class="about-name">cardgrab</div>
+              <div class="about-ver">Version {APP_VERSION}</div>
+              <div class="about-desc">Fast, complete SD card ingest for Mac.</div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <div class="title">Updates</div>
+              <div class="sub">
+                {#if updateState === 'idle'}
+                  Check the GitHub releases for a newer version.
+                {:else if updateState === 'checking'}
+                  Checking…
+                {:else if updateState === 'up-to-date'}
+                  You're on the latest version.
+                {:else if updateState === 'available'}
+                  Update available: v{latestVersion}.
+                {:else}
+                  Couldn't reach GitHub. Check your network.
+                {/if}
+              </div>
+            </div>
+            <div class="ctrl">
+              {#if updateState === 'available'}
+                <Button variant="primary" size="sm" onclick={openReleases}>Download</Button>
+              {:else}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onclick={checkForUpdates}
+                  loading={updateState === 'checking'}
+                >
+                  Check now
+                </Button>
+              {/if}
+            </div>
+          </div>
+          <div class="row">
+            <div class="lbl">
+              <div class="title">Project</div>
+              <div class="sub mono">github.com/thetejasagrawal/CardGrab</div>
+            </div>
+            <div class="ctrl">
+              <Button variant="ghost" size="sm" onclick={openReleases}>Open</Button>
+            </div>
+          </div>
+        </div>
+      </section>
     {/if}
   </div>
 </div>
@@ -268,27 +363,44 @@
   .seg {
     display: inline-flex;
     background: var(--bg-surface);
-    border: 1px solid var(--divider);
     border-radius: 6px;
-    padding: 1px;
+    padding: 2px;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.06);
   }
   .seg button {
     padding: 3px 10px;
     font-size: 11.5px;
     color: var(--text-secondary);
     border-radius: 4px;
-    transition: background var(--transition), color var(--transition);
+    transition:
+      background 180ms var(--ease-snap),
+      color 180ms var(--ease-snap),
+      box-shadow 180ms var(--ease-snap),
+      transform 200ms var(--ease-spring);
   }
+  .seg button:hover { color: var(--text-primary); }
+  .seg button:active { transform: scale(0.94); transition-duration: 80ms; }
   .seg button.on {
     background: var(--bg-card);
     color: var(--text-primary);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.10);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.12),
+      0 0 0 0.5px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.80);
+  }
+  @media (prefers-color-scheme: dark) {
+    .seg button.on {
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.40),
+        0 0 0 0.5px rgba(0, 0, 0, 0.40),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
   }
 
   .switch {
     position: relative;
-    width: 32px;
-    height: 18px;
+    width: 34px;
+    height: 20px;
     display: inline-block;
   }
   .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
@@ -296,19 +408,25 @@
     position: absolute; cursor: pointer; inset: 0;
     background: var(--bg-surface-2);
     border-radius: 999px;
-    transition: background var(--transition);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.08);
+    transition: background 220ms var(--ease-snap);
   }
   .track::before {
     content: '';
     position: absolute;
-    width: 14px; height: 14px;
+    width: 16px; height: 16px;
     left: 2px; top: 2px;
     background: white;
     border-radius: 50%;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.20);
-    transition: transform var(--transition);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.20),
+      0 0 0 0.5px rgba(0, 0, 0, 0.06);
+    transition: transform 260ms var(--ease-spring);
   }
-  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track {
+    background: var(--accent);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.15);
+  }
   .switch input:checked + .track::before { transform: translateX(14px); }
   .switch input:disabled + .track { opacity: 0.45; cursor: not-allowed; }
 
@@ -331,4 +449,36 @@
   }
   .chip.ok   { background: rgba(48, 184, 80, 0.14); color: var(--success); }
   .chip.warn { background: rgba(255, 159, 10, 0.14); color: var(--warning); }
+
+  .about-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--divider);
+  }
+  .about-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 13px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+    flex-shrink: 0;
+  }
+  .about-name {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+  }
+  .about-ver {
+    font-size: 11.5px;
+    color: var(--text-tertiary);
+    margin-top: 1px;
+    font-variant-numeric: tabular-nums;
+  }
+  .about-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
 </style>

@@ -31,3 +31,7 @@ yarn-error.log*
 
 # Misc
 *.tsbuildinfo
+
+# Local mock-card source + image generation scratch (set via CARDGRAB_MOCK_DIR)
+kr market graded/
+output/

@@ -82,6 +82,7 @@
       dest_root: destRoot,
       pattern: activePattern,
       collision,
+      verify_hash: $settings?.verify_hash ?? false,
       worker_count: $settings?.worker_count ?? null,
     };
     try {
@@ -178,7 +179,7 @@
     </div>
     <div class="action-buttons">
       <Button variant="ghost" onclick={onclose}>Cancel</Button>
-      <Button variant="glass" size="lg" onclick={start} disabled={!destRoot} loading={starting}>
+      <Button variant="primary" size="lg" onclick={start} disabled={!destRoot} loading={starting}>
         Import to this folder
       </Button>
     </div>
@@ -245,20 +246,37 @@
     border: 1px solid var(--divider);
     border-radius: var(--radius-md);
     padding: 10px 12px;
-    background: var(--bg-surface);
+    background: linear-gradient(180deg, var(--bg-card), var(--bg-surface));
     text-align: left;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.55),
+      0 1px 1px rgba(0, 0, 0, 0.03);
     transition:
-      border-color var(--transition),
-      background var(--transition),
-      box-shadow var(--transition);
+      border-color 160ms var(--ease-snap),
+      background 160ms var(--ease-snap),
+      box-shadow 160ms var(--ease-snap),
+      transform 200ms var(--ease-spring);
     cursor: default;
     min-width: 0;
   }
-  .tile:hover { background: var(--bg-hover); }
+  @media (prefers-color-scheme: dark) {
+    .tile {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 1px 1px rgba(0, 0, 0, 0.25);
+    }
+  }
+  .tile:hover {
+    background: linear-gradient(180deg, var(--bg-input), var(--bg-surface));
+    border-color: var(--divider-strong);
+  }
+  .tile:active { transform: scale(0.98); transition-duration: 90ms; }
   .tile.selected {
     border-color: var(--accent);
     background: var(--bg-selected);
-    box-shadow: 0 0 0 1px var(--accent);
+    box-shadow:
+      0 0 0 1px var(--accent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
   }
   .tile-name {
     font-size: 12.5px;
@@ -303,22 +321,39 @@
   .seg {
     display: inline-flex;
     background: var(--bg-surface);
-    border: 1px solid var(--divider);
     border-radius: 7px;
     padding: 2px;
     width: fit-content;
+    box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.06);
   }
   .seg button {
     padding: 4px 14px;
     font-size: 12px;
     color: var(--text-secondary);
     border-radius: 5px;
-    transition: background var(--transition), color var(--transition);
+    transition:
+      background 180ms var(--ease-snap),
+      color 180ms var(--ease-snap),
+      box-shadow 180ms var(--ease-snap),
+      transform 200ms var(--ease-spring);
   }
+  .seg button:hover { color: var(--text-primary); }
+  .seg button:active { transform: scale(0.95); transition-duration: 80ms; }
   .seg button.on {
     background: var(--bg-card);
     color: var(--text-primary);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.10),
+      0 0 0 0.5px rgba(0, 0, 0, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.80);
+  }
+  @media (prefers-color-scheme: dark) {
+    .seg button.on {
+      box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.34),
+        0 0 0 0.5px rgba(0, 0, 0, 0.40),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
   }
 
   .actions {

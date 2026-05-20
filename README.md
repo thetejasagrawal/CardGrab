@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/hero.svg" alt="Browse before you import — thumbnails grouped by shoot date, multi-select with shift-range, one click to import" width="100%"/>
+  <img src="docs/screenshots/card-view.png" alt="Browse before you import — thumbnails grouped by shoot date, multi-select with shift-range, one click to import" width="100%"/>
 </p>
 
 ---
@@ -17,7 +17,7 @@
 **cardgrab** is what Image Capture should have been in 2026. It pulls everything off your SD card — including the video files Image Capture quietly skips — at full reader speed, organizes them into folders you'll actually find later, and stays out of your way.
 
 <p align="center">
-  <img src="docs/screenshots/progress.svg" alt="Live progress: throughput, ETA, current file" width="100%"/>
+  <img src="docs/screenshots/settings.png" alt="Settings: destination, folder templates, conflict policy, parallel transfers" width="100%"/>
 </p>
 
 ## Why this exists

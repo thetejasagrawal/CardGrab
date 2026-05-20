@@ -1,3 +1,4 @@
+use std::io::Read;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -31,6 +32,7 @@ pub struct StartImportArgs {
     pub dest_root: String,
     pub pattern: String,
     pub collision: CollisionPolicy,
+    pub verify_hash: bool,
     pub worker_count: Option<usize>,
 }
 
@@ -52,6 +54,7 @@ pub struct ImportProgress {
 pub struct ImportCompleted {
     pub import_id: String,
     pub status: String,
+    pub dest_root: String,
     pub file_count: usize,
     pub bytes_total: u64,
     pub failures: usize,
@@ -60,6 +63,10 @@ pub struct ImportCompleted {
 fn safety_assert_different_volumes(src: &Path, dst_dir: &Path) -> AppResult<()> {
     // Camera sources have synthetic paths (camera://...) — skip the check.
     if !src.exists() {
+        return Ok(());
+    }
+    // Mock-card mode: source and dest are intentionally on the same volume.
+    if std::env::var("CARDGRAB_MOCK_DIR").is_ok() {
         return Ok(());
     }
     let src_meta = std::fs::metadata(src)?;
@@ -107,6 +114,7 @@ async fn copy_one(
     dst_final: PathBuf,
     bytes_total_progress: Arc<AtomicU64>,
     cancel: Arc<AtomicBool>,
+    verify_after_copy: bool,
 ) -> AppResult<()> {
     if let Some(parent) = dst_final.parent() {
         tokio::fs::create_dir_all(parent).await?;
@@ -165,7 +173,45 @@ async fn copy_one(
             let _ = filetime::set_file_mtime(&dst_final, filetime::FileTime::from_system_time(mt));
         }
     }
+
+    if verify_after_copy {
+        let src = file.src_abs.clone();
+        let dst = dst_final.clone();
+        tokio::task::spawn_blocking(move || verify_same_bytes(&src, &dst))
+            .await
+            .map_err(|e| AppError::Other(e.to_string()))??;
+    }
     Ok(())
+}
+
+fn verify_same_bytes(src: &Path, dst: &Path) -> AppResult<()> {
+    let src_meta = std::fs::metadata(src)?;
+    let dst_meta = std::fs::metadata(dst)?;
+    if src_meta.len() != dst_meta.len() {
+        return Err(AppError::Other(format!(
+            "verification failed: size mismatch for {:?}",
+            src
+        )));
+    }
+
+    let mut src_file = std::fs::File::open(src)?;
+    let mut dst_file = std::fs::File::open(dst)?;
+    let mut src_buf = [0_u8; 1024 * 1024];
+    let mut dst_buf = [0_u8; 1024 * 1024];
+
+    loop {
+        let src_read = src_file.read(&mut src_buf)?;
+        let dst_read = dst_file.read(&mut dst_buf)?;
+        if src_read != dst_read || src_buf[..src_read] != dst_buf[..dst_read] {
+            return Err(AppError::Other(format!(
+                "verification failed: byte mismatch for {:?}",
+                src
+            )));
+        }
+        if src_read == 0 {
+            return Ok(());
+        }
+    }
 }
 
 pub async fn run_import(
@@ -207,6 +253,7 @@ pub async fn run_import(
     let bytes_total: u64 = report.files.iter().map(|f| f.bytes).sum();
     let bytes_done = Arc::new(AtomicU64::new(0));
     let workers = args.worker_count.unwrap_or(4).clamp(1, 8);
+    let verify_after_copy = args.verify_hash;
     let sem = Arc::new(Semaphore::new(workers));
 
     // Plan all paths (sequential, fast) so collisions can be resolved deterministically
@@ -271,6 +318,7 @@ pub async fn run_import(
         let started = started;
         let failure_count = failure_count.clone();
         let success_count = success_count.clone();
+        let verify_after_copy = verify_after_copy;
 
         let handle = tokio::spawn(async move {
             let _permit = match sem.acquire_owned().await {
@@ -303,7 +351,15 @@ pub async fn run_import(
                 return;
             };
 
-            match copy_one(file.clone(), dst.clone(), bytes_done.clone(), cancel.clone()).await {
+            match copy_one(
+                file.clone(),
+                dst.clone(),
+                bytes_done.clone(),
+                cancel.clone(),
+                verify_after_copy,
+            )
+            .await
+            {
                 Ok(_) => {
                     success_count.fetch_add(1, Ordering::Relaxed);
                     let conn = db.lock();
@@ -371,6 +427,7 @@ pub async fn run_import(
         ImportCompleted {
             import_id,
             status: status.to_string(),
+            dest_root: dest_root.to_string_lossy().to_string(),
             file_count: successes,
             bytes_total: bytes_done.load(Ordering::Relaxed),
             failures,
