@@ -1,6 +1,6 @@
 [package]
 name = "cardgrab"
-version = "0.1.2"
+version = "0.1.3"
 description = "Fast, complete SD card ingest"
 authors = ["Tejas Agrawal"]
 edition = "2021"

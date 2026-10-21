@@ -65,6 +65,9 @@ Optional for direct-camera (PTP) ingest:
 brew install gphoto2
 ```
 
+For app-icon changes, follow the [desktop icon export instructions](docs/ICONS.md)
+to preserve clean transparent edges at Dock sizes.
+
 ## Folder templates
 
 The default template is `{date}` — one folder per shoot date, everything in it. Available variables:

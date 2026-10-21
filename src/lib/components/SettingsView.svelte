@@ -4,7 +4,7 @@
   import Button from './Button.svelte';
   import { open as openUrl } from '@tauri-apps/plugin-shell';
 
-  const APP_VERSION = '0.1.2';
+  const APP_VERSION = '0.1.3';
   const RELEASES_URL = 'https://github.com/thetejasagrawal/CardGrab/releases';
 
   let local = $state<Settings | null>(null);
