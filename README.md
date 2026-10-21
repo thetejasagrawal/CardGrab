@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="cardgrabicon.png" alt="cardgrab" width="140"/>
+  <img src="cardgrabicon.png" alt="CardGrab app icon — a hand holding an SD card on blue" width="140" height="140"/>
 </p>
 
 <h1 align="center">cardgrab</h1>
