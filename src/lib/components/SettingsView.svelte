@@ -4,7 +4,7 @@
   import Button from './Button.svelte';
   import { open as openUrl } from '@tauri-apps/plugin-shell';
 
-  const APP_VERSION = '0.1.1';
+  const APP_VERSION = '0.1.2';
   const RELEASES_URL = 'https://github.com/thetejasagrawal/CardGrab/releases';
 
   let local = $state<Settings | null>(null);
@@ -460,8 +460,7 @@
   .about-icon {
     width: 56px;
     height: 56px;
-    border-radius: 13px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.12));
     flex-shrink: 0;
   }
   .about-name {
